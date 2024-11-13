@@ -34,10 +34,10 @@
             <a class="nav-link text-white text-center" aria-current="page" href="#">Home</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-white text-center" href="#">About</a>
+            <a class="nav-link text-white text-center" data-bs-toggle="modal" data-bs-target="#modalAbout">About</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link text-white text-center" href="#">Contact</a>
+            <a class="nav-link text-white text-center"  data-bs-toggle="modal" data-bs-target="#modalContact">Contact</a>
           </li>
         </ul>
         <div class="nav-item text-center">
@@ -53,10 +53,94 @@
       </div>
     </div>
   </nav>
+    <!-- Okno About -->
+  <div class="modal fade" id="modalAbout" tabindex="-1" aria-labelledby="modalAboutLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="modalAboutLabel">O Nas</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+        </div>
+        <div class="modal-body">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-12">
+                <img src="./img/the-office56czolo.jpg" alt="zdjecie" class="img-fluid mb-3">
+              </div>
+              <div class="col-12">
+                <p>
+                  <p class="fw-bold">Witamy w naszym sklepie internetowym!</p>Jesteśmy zespołem pasjonatów, którzy za cel postawili sobie dostarczanie produktów najwyższej jakości, aby sprostać oczekiwaniom nawet najbardziej wymagających klientów. Nasz sklep oferuje szeroki wybór produktów w atrakcyjnych cenach, które codziennie pomagają naszym klientom cieszyć się życiem i realizować swoje pasje.
+                  Nasza misja to nie tylko dostarczanie towarów, ale także budowanie trwałych relacji z klientami poprzez najwyższy standard obsługi oraz kompleksową pomoc na każdym etapie zakupów. Dbamy o to, aby zakupy w naszym sklepie były łatwe, szybkie i przyjemne.<br>
+                  <br>Dziękujemy za zaufanie <br>
+                  i zapraszamy do zapoznania się z naszą ofertą!
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Okno Contact-->
+  <div class="modal fade" id="modalContact" tabindex="-1" aria-labelledby="modalContactLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalContactLabel">Formularz Kontaktowy</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="mb-3">
+              <label for="contactName" class="form-label">Imię</label>
+              <input type="text" class="form-control" id="contactName" required>
+            </div>
+            <div class="mb-3">
+              <label for="contactEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="contactEmail" required>
+            </div>
+            <div class="mb-3">
+              <label for="contactMessage" class="form-label">Wiadomość</label>
+              <textarea class="form-control" id="contactMessage" rows="3" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Wyślij</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="product-row" class="container text-center">
     <!-- Produkty  -->
   </div>
-  
+
+    <!-- Okno Produktu -->
+  <div class="modal fade" id="productModal" tabindex="-1" role="dialog" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title fw-bold" id="ProductName"></h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-md-6" id="ProductImage"></div>
+                  <div class="col-md-5" >
+                    <div class="mb-2"><p class="fw-bold">Opis:</p><p id="ProductDescription"></p></div>
+                    <div class="mb-2"><p id="ProductPrice"></p></div>
+                  </div>
+              </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-dark">Dodaj do koszyka</button>
+            </div>
+          </div>
+      </div>
+  </div>
+ 
   <footer class="container-fluid text-center bg-custom border-top border-dark border-2">
     <div class="row pt-2 pb-2">
       <div class="col ">
