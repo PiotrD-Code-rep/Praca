@@ -1,98 +1,177 @@
+const dotenv = require('dotenv');
+dotenv.config();
 const {Uzytkownicy}=require('../models/Uzytkownicy')
 const express= require('express');
 const router=express.Router();
 const bcrypt= require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const JWT_SECRET='4d2c9d17ab134f5eacee0f1c8bb9ff8e17c93d5b7b62280729a5a9f8dc6013a77c12e0bde6b68ab3c07e8f5e1bcd68df2e5747c1e1db4d349b9f1f9ad3b3e8b4';
+const {createAccessToken,sendAccessToken}= require('../helpers/token');
+const {verifyToken ,isAdmin } = require('../middleware/auth')
 
-//Wyszyscy uzytkownicy
-router.get('/',(req,res)=>{
-    Uzytkownicy.find().select('-haslo')
-        .then(uzytkownicy=>{
-            if(uzytkownicy){
-                return res.status(200).send(uzytkownicy);
-            }else{
-              return res.status(404).json({success:false,message:'Nie znaleziono'});
-            }
-          }).catch(err=>{
-          res.status(400).json({message:'Błąd serwera', error:err});
-          });
-});
-//Wyszukiwanie pod id Uzytkowanika
-router.get('/:id',(req,res)=>{
-    Uzytkownicy.findById(req.params.id).select('-haslo')
-    .then(uzytkownicy=>{
-        if(uzytkownicy){
-            return res.status(200).send(uzytkownicy);
-        }else{
-            return res.status(404).json({success:false,message:'Nie znaleziono katygori'});
+// Wszystkie użytkownicy
+router.get('/', verifyToken, isAdmin, async (req, res) => {
+    try{
+        const uzytkownicy = await Uzytkownicy.find().select('-haslo');
+        if (uzytkownicy){
+            return res.status(200).json(uzytkownicy);
+        } else{
+            return res.status(404).json({ success: false, message: 'Nie znaleziono użytkowników.' });
         }
-    }).catch(err=>{
-        return res.status(400).json({message:'Błąd serwera',error:err});
-    });
+    }catch (err){
+        return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+    }
 });
 
-//Dowanie Użytkownika
-router.post('/',(req, res) => {
-   const uzytkownicy = new Uzytkownicy ({
-      imie: req.body.imie,
-      nazwisko:req.body.nazwisko,
-      email:req.body.email,
-      haslo: bcrypt.hashSync(req.body.haslo,10),
-      admin:req.body.admin,
-      adres:req.body.adres,
-    });
-    uzytkownicy.save().then(uzytkownicy=>{
-      if(uzytkownicy){
-          return res.status(200).send(uzytkownicy);
-      }else{
-          return res.status(404).json({success:false,message:'Nie dodano uzytkownicy'});
-      }
-    }).catch(err=>{
-      res.status(400).json({message:'Błąd serwera', error:err});
-    });
+// Wyszukiwanie pod ID użytkownika
+router.get('/:id', verifyToken, isAdmin, async (req, res) => {
+    try{
+        const uzytkownik = await Uzytkownicy.findById(req.params.id).select('-haslo');
+        if (uzytkownik){
+            return res.status(200).json(uzytkownik);
+        } else{
+            return res.status(404).json({ success: false, message: 'Nie znaleziono użytkownika o podanym ID.' });
+        }
+    }catch (err){
+        return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+    }
 });
 
-//Ogrniete z https://dvmhn07.medium.com/jwt-authentication-in-node-js-a-practical-guide-c8ab1b432a49
-// User login
+// Dodawanie użytkownika
+router.post('/', verifyToken, isAdmin, async (req, res) => {
+    try{
+        const { imie, nazwisko, email, haslo, adres } = req.body;
+        // Sprawdzenie wymaganych pól
+        if (!imie || !nazwisko || !email || !haslo || !adres){
+            return res.status(400).json({ message: 'Pola "imie", "nazwisko", "email", "haslo" i "adres" są wymagane.' });
+        }
+
+        // Sprawdzenie, czy użytkownik o podanym email już istnieje
+        const existUzytkownik = await Uzytkownicy.findOne({ email });
+        if (existUzytkownik) {
+            return res.status(400).json({ message: 'Użytkownik o podanym email już istnieje.' });
+        }
+        // Hashowanie hasła
+        const hashHaslo = await bcrypt.hash(haslo, 10);
+        const newUzytkownik = new Uzytkownicy({
+            imie,
+            nazwisko,
+            email,
+            haslo: hashHaslo,
+            adres,
+        });
+
+        const savedUzytkownik = await newUzytkownik.save();
+        if (savedUzytkownik){
+            return res.status(201).json(savedUzytkownik); 
+        } else{
+            return res.status(400).json({ success: false, message: 'Nie udało się dodać użytkownika.' });
+        }
+    }catch (err){
+        return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+    }
+});
+
+// Edycja użytkownika
+router.put('/:id', verifyToken, isAdmin, async (req, res) => {
+    try{
+        const { imie, nazwisko, email, haslo, adres } = req.body;
+        if (!imie || !nazwisko || !email || !adres){
+            return res.status(400).json({ message: 'Pola "imie", "nazwisko", "email" i "adres" są wymagane.' });
+        }
+        const updatedData = {
+            imie,
+            nazwisko,
+            email,
+            adres,
+        };
+        if (haslo){
+            updatedData.haslo = await bcrypt.hash(haslo, 10);
+        }
+        const updatedUser = await Uzytkownicy.findByIdAndUpdate(req.params.id, updatedData, { new: true }).select('-haslo');
+        if (updatedUser){
+            return res.status(200).json(updatedUser);
+        } else{
+            return res.status(404).json({ message: 'Nie znaleziono użytkownika o podanym ID.' });
+        }
+    }catch (err){
+        return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+    }
+});
+
+// Usuwanie użytkownika
+router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
+    try{
+        const deletedUser = await Uzytkownicy.findByIdAndDelete(req.params.id);
+        if (deletedUser){
+            return res.status(200).json({ message: 'Użytkownik został usunięty.' });
+        } else{
+            return res.status(404).json({ message: 'Nie znaleziono użytkownika o podanym ID.' });
+        }
+    }catch (err){
+        return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+    }
+});
+
+// Logowanie użytkownika
 router.post('/Logowanie', async (req, res) => {
- try {
-    const { email, haslo} = req.body;
-    const user = await Uzytkownicy.findOne({ email });
+    try{
+        const { email, haslo } = req.body;
+        // Sprawdzenie, czy email i hasło są dostarczone
+        if (!email || !haslo){
+            return res.status(400).json({ error: 'Email i hasło są wymagane.' });
+        }
 
-    if (!user) {
-        return res.status(401).json({ error: 'Authentication failed' });
-    }
-    const passwordMatch = await bcrypt.compare(haslo, user.haslo);
+        const user = await Uzytkownicy.findOne({ email });
 
-    if (!passwordMatch) {
-        return res.status(401).json({ error: 'Authentication failed' });
-    }
+        if (!user){
+            return res.status(401).json({ error: 'Nieprawidłowy email lub hasło.' });
+        }
 
-    const token = jwt.sign({ userId: user._id, admin: user.admin  }, JWT_SECRET, {expiresIn: '1h',});
-    
-    res.status(200).json({user:user.email,token: token });
-    }catch (error) {
-    res.status(500).json({ error: 'Login failed' });
+        const passwordMatch = await bcrypt.compare(haslo, user.haslo);
+        if (!passwordMatch){
+            return res.status(401).json({ error: 'Nieprawidłowy email lub hasło.' });
+        }
+
+        const token = createAccessToken(user._id, user.admin);
+        console.log('Serwerowy czas teraz:', new Date().toISOString());
+        // console.log('Czas wygaśnięcia tokena:', new Date(Date.now() + 3600 * 1000).toISOString());
+        sendAccessToken(res,token);
+    }catch (error){
+        res.status(500).json({ error: 'Błąd podczas logowania.' });
     }
 });
-router.post('/Rejestracja',(req, res) => {
-    const uzytkownicy = new Uzytkownicy ({
-       imie: req.body.imie,
-       nazwisko:req.body.nazwisko,
-       email:req.body.email,
-       haslo: bcrypt.hashSync(req.body.haslo,10),
-       admin:req.body.admin,
-       adres:req.body.adres,
-     });
-     uzytkownicy.save().then(uzytkownicy=>{
-       if(uzytkownicy){
-           return res.status(200).send(uzytkownicy);
-       }else{
-           return res.status(404).json({success:false,message:'Nie dodano uzytkownicy'});
-       }
-     }).catch(err=>{
-       res.status(400).json({message:'Błąd serwera', error:err});
-     });
- });
+
+// Rejestracja użytkownika
+router.post('/Rejestracja', async (req, res) => {
+    try{
+        const { imie, nazwisko, email, haslo,  adres } = req.body;
+        // Sprawdzenie wymaganych pól
+        if (!imie || !nazwisko || !email || !haslo || !adres){
+            return res.status(400).json({ message: 'Pola "imie", "nazwisko", "email", "haslo"  i "adres" są wymagane.' });
+        }
+        // Sprawdzenie, czy użytkownik o podanym email już istnieje
+        const existUzytkownik = await Uzytkownicy.findOne({ email });
+        if (existUzytkownik){
+            return res.status(400).json({ message: 'Użytkownik o podanym email już istnieje.' });
+        }
+        // Hashowanie hasła
+        const hashHaslo = await bcrypt.hash(haslo, 10);
+        const newUzytkownik = new Uzytkownicy({
+            imie,
+            nazwisko,
+            email,
+            haslo: hashHaslo,
+            adres,
+        });
+
+        const savedUzytkownik = await newUzytkownik.save();
+        if (savedUzytkownik){
+            return res.status(201).json(savedUzytkownik); 
+        } else{
+            return res.status(400).json({ success: false, message: 'Nie udało się dodać użytkownika.' });
+        }
+    }catch (err){
+        return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+    }
+});
+
 module.exports=router;

@@ -1,0 +1,191 @@
+
+### Produkty
+GET http://127.0.0.1:3000/Produkty
+# Authorization: Bearer {{JWT}}
+
+###
+GET http://127.0.0.1:3000/Produkty/:id
+# Authorization: Bearer {{JWT}}
+
+###
+PUT http://127.0.0.1:3000/Produkty/:id
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzQwY2IzN2M0YTI0NWQwZjA5NzE1ZDAiLCJhZG1pbiI6dHJ1ZSwiaWF0IjoxNzMyNTU0MTk3LCJleHAiOjE3MzI1NTc3OTd9.uhWkBhPH7R_4rIhjMzaNeTvbTLt_LEfFV-qadiNcfvU
+
+{
+    "_id": "6744b1021d29defc8db4d15" ,
+    "nazwa_produktu": "string1",
+    "opis_produktu": "string1",
+    "cena": 123,
+    "katygoria": "67251323a93ae20495a883e5",
+    "stan_magazynowy": 13,
+    "zdjecia_produktu": ["string"]
+}
+
+###
+POST http://127.0.0.1:3000/Produkty
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NzQwY2IzN2M0YTI0NWQwZjA5NzE1ZDAiLCJhZG1pbiI6dHJ1ZSwiaWF0IjoxNzMyNTU0MTk3LCJleHAiOjE3MzI1NTc3OTd9.uhWkBhPH7R_4rIhjMzaNeTvbTLt_LEfFV-qadiNcfvU
+
+{
+    "nazwa_produktu": "string",
+    "opis_produktu": "string",
+    "cena": 121,
+    "katygoria": "67251323a93ae20495a883e5",
+    "stan_magazynowy": 123,
+    "zdjecia_produktu": ["string"]
+}
+
+###
+DELETE http://127.0.0.1:3000/Produkty/:id
+Authorization: Bearer {{JWT}}
+
+### Kategorie
+GET http://127.0.0.1:3000/Katygorie
+Authorization: Bearer {{JWT}}
+
+###
+GET http://127.0.0.1:3000/Katygorie/:id
+Authorization: Bearer {{JWT}}
+
+###
+PUT http://127.0.0.1:3000/Katygorie/:id
+Content-Type: application/json
+Authorization: Bearer {{JWT}}
+
+{
+    "nazwa_katygori": "string",
+    "opis_katygori": "string",
+    "dla_kogo": "string",
+    "marka": "string"
+}
+
+###
+POST http://127.0.0.1:3000/Katygorie
+Content-Type: application/json
+Authorization: Bearer {{JWT}}
+
+{
+    "nazwa_katygori": "string",
+    "opis_katygori": "string",
+    "dla_kogo": "string",
+    "marka": "string"
+}
+
+###
+DELETE http://127.0.0.1:3000/Katygorie/:id
+Authorization: Bearer {{JWT}}
+
+### Użytkownicy
+GET http://127.0.0.1:3000/Uzytkownicy
+Authorization: Bearer {{JWT}}
+
+###
+GET http://127.0.0.1:3000/Uzytkownicy/:id
+Authorization: Bearer {{JWT}}
+
+###
+POST http://127.0.0.1:3000/Uzytkownicy
+Content-Type: application/json
+Authorization: Bearer {{JWT}}
+
+{
+    "imie": "string",
+    "nazwisko": "string",
+    "email": "string",
+    "haslo": "string",
+    "admin": boolean,
+    "adres": "string"
+}
+
+###
+POST http://127.0.0.1:3000/api/Uzytkownicy/Logowanie
+Content-Type: application/json
+
+{
+    "email": "piotrdudek42@gmail.com",
+    "haslo": "test"
+}
+
+###
+POST http://127.0.0.1:3000/Uzytkownicy/Rejestracja
+Content-Type: application/json
+
+{
+    "imie": "string",
+    "nazwisko": "string",
+    "email": "string",
+    "haslo": "string",
+    "admin": boolean,
+    "adres": "string"
+}
+
+### Transakcje
+GET http://127.0.0.1:3000/Transakcje
+Authorization: Bearer {{JWT}}
+
+###
+GET http://127.0.0.1:3000/Transakcje/:id
+Authorization: Bearer {{JWT}}
+
+###
+PUT http://127.0.0.1:3000/Transakcje/:id
+Content-Type: application/json
+Authorization: Bearer {{JWT}}
+
+{
+    "typ_transakcji": "string",
+    "uzytkownik": "string",
+    "kwota": number
+}
+
+###
+POST http://127.0.0.1:3000/Transakcje
+Content-Type: application/json
+Authorization: Bearer {{JWT}}
+
+{
+    "typ_transakcji": "string",
+    "uzytkownik": "string",
+    "kwota": number
+}
+
+###
+DELETE http://127.0.0.1:3000/Transakcje/:id
+Authorization: Bearer {{JWT}}
+
+### Zamówienie Pozycja
+GET http://127.0.0.1:3000/Zamowienie_Pozycja
+Authorization: Bearer {{JWT}}
+
+###
+GET http://127.0.0.1:3000/Zamowienie_Pozycja/:id
+Authorization: Bearer {{JWT}}
+
+###
+PUT http://127.0.0.1:3000/Zamowienie_Pozycja/:id
+Content-Type: application/json
+Authorization: Bearer {{JWT}}
+
+{
+    "transakcja": "string",
+    "produkt": "string",
+    "ilosc": number,
+    "cena": number
+}
+
+###
+POST http://127.0.0.1:3000/Zamowienie_Pozycja
+Content-Type: application/json
+Authorization: Bearer {{JWT}}
+
+{
+    "transakcja": "string",
+    "produkt": "string",
+    "ilosc": number,
+    "cena": number
+}
+
+###
+DELETE http://127.0.0.1:3000/Zamowienie_Pozycja/:id
+Authorization: Bearer {{JWT}}

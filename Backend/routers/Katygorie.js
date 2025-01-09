@@ -1,9 +1,11 @@
 const {Katygorie}=require('../models/Katygorie')
 const express= require('express');
 const router=express.Router();
+const {verifyToken ,isAdmin } = require('../middleware/auth')
+
 
 //Wszystkie Katygorie
-router.get('/',(req,res)=>{
+router.get('/',verifyToken,isAdmin,(req,res)=>{
     Katygorie.find()
     .then(katygorie=>{
         if(katygorie){
@@ -13,11 +15,11 @@ router.get('/',(req,res)=>{
         }
     }).catch(err=>{
         return res.status(400).json({message:'Błąd serwera',error:err})
-    })
-})
+    });
+});
 
 //Wyszukiwanie pod id Katygori
-router.get('/:id',(req,res)=>{
+router.get('/:id',verifyToken,isAdmin,(req,res)=>{
     Katygorie.findById(req.params.id)
     .then(katygorie=>{
         if(katygorie){
@@ -27,11 +29,11 @@ router.get('/:id',(req,res)=>{
         }
     }).catch(err=>{
         return res.status(400).json({message:'Błąd serwera',error:err})
-    })
-})
+    });
+});
 
 //Aktualizacja katygori
-router.put('/:id',(req,res)=>{
+router.put('/:id',verifyToken,isAdmin,(req,res)=>{
     Katygorie.findByIdAndUpdate(
         req.params.id,
         {
@@ -48,12 +50,11 @@ router.put('/:id',(req,res)=>{
         }
     }).catch(err=>{
         return res.status(400).json({message:'Błąd serwera',error:err})
-    })
-    
-})
+    }); 
+});
 
 //Dodawanie Katygorii
-router.post('/',(req,res)=>{
+router.post('/',verifyToken,isAdmin,(req,res)=>{
     const katygorie= new Katygorie({
         nazwa_katygori:req.body.nazwa_katygori,
         opis_katygori:req.body.opis_katygori,
@@ -69,10 +70,10 @@ router.post('/',(req,res)=>{
     }).catch(err=>{
         res.status(400).json({message:'Błąd serwera', error:err});
     });
-})
+});
 
 //Usuwannie Katygori
-router.delete('/:id',async(req,res)=>{
+router.delete('/:id',verifyToken,isAdmin,(req,res)=>{
     Katygorie.findByIdAndDelete(req.params.id)
         .then(katygorie=>{
             if(katygorie){
@@ -82,7 +83,7 @@ router.delete('/:id',async(req,res)=>{
             }
         }).catch(err=>{
             return res.status(400).json({message:'Błąd serwera',error:err});
-        })
-})
+        });
+});
 
 module.exports=router;

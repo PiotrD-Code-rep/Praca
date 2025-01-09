@@ -1,39 +1,70 @@
-const {expressjwt} = require('express-jwt');
-const JWT_SECRET='4d2c9d17ab134f5eacee0f1c8bb9ff8e17c93d5b7b62280729a5a9f8dc6013a77c12e0bde6b68ab3c07e8f5e1bcd68df2e5747c1e1db4d349b9f1f9ad3b3e8b4';
+const dotenv = require('dotenv');
+dotenv.config();
+const jwt = require('jsonwebtoken');
 
-function auth(){
-    const secret=JWT_SECRET;
-    return expressjwt({
-        secret,
-        algorithms:['HS256'],
-        isRevoked: isRevoked
-    }).unless({
-        path:[
-            { url: '/Produkty', methods: ['GET'] },
-            { url: '/Uzytkownicy/Logowanie', methods: ['POST'] },
-            { url: '/Uzytkownicy/Rejestracja', methods: ['POST'] }
-        ]
-    })
+// Middleware do weryfikacji tokena z CIASTECZKA
+function verifyToken(req, res, next) {
+  
+  // Odczytujemy token z ciasteczka (np. 'token')
+  const token = req.cookies.token; 
+  if (!token) {
+    return res.status(401).send('No token provided');
+  }
+  
+  try {
+    // Weryfikacja tokena
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(403).send('Invalid token');
+  }
 }
 
-async function isRevoked (req,payload,done) {
-    if(!payload.admin){
-        done(null,true)
-    }
-    done();
+// Middleware sprawdzający, czy użytkownik jest adminem
+function isAdmin(req, res, next) {
+  if (!req.user || !req.user.admin) {
+    return res.status(403).send('Access denied. Admins only.');
+  }
+  next();
 }
-module.exports=auth
 
+module.exports = { verifyToken, isAdmin };
+
+// dotenv.config();
+// const jwt = require('jsonwebtoken');
+
+// // Middleware do weryfikacji tokena
 // function verifyToken(req, res, next) {
-// const token = req.header('Authorization');
-// if (!token) return res.status(401).json({ error: 'Access denied' });
-// try {
-//  const decoded = jwt.verify(token, 'your-secret-key');
-//  req.userId = decoded.userId;
-//  next();
-//  } catch (error) {
-//  res.status(401).json({ error: 'Invalid token' });
-//  }
-//  };
+//     const token = localStorage.getItem('token'); // Pobranie nagłówka Authorization
+//     if (!token) {
+//         return res.status(401).send('No token provided');
+//     }
 
-// module.exports = verifyToken;
+//     try {
+//         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET); // Weryfikacja tokena
+//         req.user = decoded; // Przypisanie danych użytkownika z tokena do req.user
+//         next(); // Przejście do kolejnego middleware/obsługi trasy
+//     } catch (err) {
+//         return res.status(403).send('Invalid token');
+//     }
+// }
+
+// function isAdmin(req, res, next) {
+//     if (!req.user || !req.user.admin) {
+//         return res.status(403).send('Access denied. Admins only.');
+//     }
+//     next();
+// }
+
+// module.exports = {verifyToken ,isAdmin} ; 
+
+
+
+
+
+
+
+
+
+

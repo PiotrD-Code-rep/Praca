@@ -2,104 +2,117 @@ const { Katygorie } = require('../models/Katygorie');
 const {Produkty}=require('../models/Produkty')
 const express= require('express');
 const router=express.Router();
+const {verifyToken ,isAdmin } = require('../middleware/auth')
 
-
-//Wszystkie produkty 
-router.get('/',(req, res) => {
- Produkty.find().select('nazwa_produktu cena zdjecia_produktu opis_produktu').then(produkty=>{
-    if(produkty){
-      return res.status(200).send(produkty);
-    }else{
-      return res.status(404).json({success:false,message:'Nie znaleziono'});
-    }
-  }).catch(err=>{
-  res.status(400).json({message:'Błąd serwera', error:err});
-  });
-});
-
-//Wyszukiwanie pod id produktu
-router.get('/:id',(req,res) => {
-  Produkty.findById(req.params.id).then(produkty => {
-    if(produkty){
-        return res.status(200).send(produkty);
-    }else{
-        return res.status(404).json({success:false,message:'Nie znaleziono produktu'});
-    }
-  }).catch(err=>{
-    res.status(400).json({message:'Błąd serwera', error:err});
-  });
-});
-
-//Aktualizacja produktu
-router.put('/:id',(req,res) => {
-  //Walidacjia Katygori
-  Katygorie.findById(req.body.katygoria).then(katygoria=>{
-    if(!katygoria){
-      return res.status(400).send('Nie poprwna katygoria');
-    }
-  })
-  Produkty.findByIdAndUpdate(
-    req.params.id,
-    {
-      nazwa_produktu: req.body.nazwa_produktu,
-      opis_produktu:req.body.opis_produktu,
-      cena:req.body.cena,
-      katygoria: req.body.katygoria,
-      stan_magazynowy:req.body.stan_magazynowy,
-      zdjecia_produktu:req.body.zdjecia_produktu,
-    },{new: true}
-    ).then(produkty=>{
-      if(produkty){
-        return res.status(200).send(produkty);
-      }else{
-        return res.status(404).json({success:false,message:'Nie zaktualizowano'});
+// Wszystkie produkty
+router.get('/', async (req, res) => {
+  try{
+      const produkty = await Produkty.find().select('nazwa_produktu cena zdjecia_produktu opis_produktu');
+      if (produkty){
+          return res.status(200).json(produkty);
+      } else {
+          return res.status(404).json({ success: false, message: 'Nie znaleziono produktów.' });
       }
-    }).catch(err=>{
-    res.status(400).json({message:'Błąd serwera', error:err});
-    });
-})
+  }catch (err){
+      return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+  }
+});
 
+// Wyszukiwanie pod ID produktu
+router.get('/:id', async (req, res) => {
+  try{
+      const produkt = await Produkty.findById(req.params.id).select('nazwa_produktu cena zdjecia_produktu opis_produktu katygoria stan_magazynowy');
+      if (produkt){
+          return res.status(200).json(produkt);
+      } else{
+          return res.status(404).json({ success: false, message: 'Nie znaleziono produktu o podanym ID.' });
+      }
+  }catch (err){
+      return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+  }
+});
 
-// Dodwanie produktu
-router.post('/',(req, res) => {
-  //Walidacjia Katygori
-  Katygorie.findById(req.body.katygoria).then(katygoria=>{
-    if(!katygoria){
-      return res.status(400).send('Nie poprwna katygoria');
-    }
-  })
+// Aktualizacja produktu
+router.put('/:id', verifyToken, isAdmin, async (req, res) => {
+  try{
+      const { katygoria, nazwa_produktu, opis_produktu, cena, stan_magazynowy, zdjecia_produktu } = req.body;
+      // Walidacja kategorii
+      const katygoriaDoc = await Katygorie.findById(katygoria);
+      if (!katygoriaDoc){
+          return res.status(400).json({ message: 'Niepoprawny identyfikator kategorii.' });
+      }
 
- const produkty = new Produkty ({
-    nazwa_produktu: req.body.nazwa_produktu,
-    opis_produktu:req.body.opis_produktu,
-    cena:req.body.cena,
-    katygoria: req.body.katygoria,
-    stan_magazynowy:req.body.stan_magazynowy,
-    zdjecia_produktu:req.body.zdjecia_produktu,
-  });
-  produkty.save().then(produkty=>{
-    if(produkty){
-        return res.status(200).send(produkty);
-    }else{
-        return res.status(404).json({success:false,message:'Nie dodano produktu'});
-    }
-  }).catch(err=>{
-    res.status(400).json({message:'Błąd serwera', error:err});
-  });
-})
+      // Aktualizacja produktu
+      const updatedProdukt = await Produkty.findByIdAndUpdate(
+          req.params.id,
+          {
+              nazwa_produktu,
+              opis_produktu,
+              cena,
+              katygoria,
+              stan_magazynowy,
+              zdjecia_produktu,
+          },
+          { new: true, runValidators: true }
+      );
 
+      if (updatedProdukt){
+          return res.status(200).json(updatedProdukt);
+      } else{
+          return res.status(404).json({ success: false, message: 'Nie znaleziono produktu do aktualizacji.' });
+      }
+  }catch (err){
+      return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+  }
+});
 
-router.delete('/:id',(req,res)=>{
-  Produkty.findByIdAndDelete(req.params.id)
-      .then(produkty=>{
-          if(produkty){
-              return res.status(200).json({success:true,message:'Usunieto katygorie'})
-          }else{
-              return res.status(404).json({success:false,message:'Nie znaleziono katygori'})
-          }
-      }).catch(err=>{
-          return res.status(400).json({success:false,error:err})
-      })
-})
+// Dodawanie produktu
+router.post('/', verifyToken, isAdmin, async (req, res) => {
+  try{
+      const { katygoria, nazwa_produktu, opis_produktu, cena, stan_magazynowy, zdjecia_produktu } = req.body;
+
+      // Sprawdzenie wymaganych pól
+      if (!katygoria || !nazwa_produktu || !opis_produktu || cena === undefined || stan_magazynowy === undefined){
+          return res.status(400).json({ message: 'Pola "katygoria", "nazwa_produktu", "opis_produktu", "cena", "stan_magazynowy" są wymagane.' });
+      }
+      // Walidacja kategorii
+      const katygoriaDoc = await Katygorie.findById(katygoria);
+      if (!katygoriaDoc){
+          return res.status(400).json({ message: 'Niepoprawny identyfikator kategorii.' });
+      }
+      // Tworzenie nowego produktu
+      const produkt = new Produkty({
+          katygoria,
+          nazwa_produktu,
+          opis_produktu,
+          cena,
+          stan_magazynowy,
+          zdjecia_produktu,
+      });
+
+      const savedProdukt = await produkt.save();
+      if (savedProdukt){
+          return res.status(201).json(savedProdukt);
+      } else{
+          return res.status(400).json({ success: false, message: 'Nie udało się dodać produktu.' });
+      }
+  }catch (err){
+      return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+  }
+});
+
+// Usuwanie produktu
+router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
+  try{
+      const deletedProdukt = await Produkty.findByIdAndDelete(req.params.id);
+      if (deletedProdukt){
+          return res.status(200).json({ success: true, message: 'Produkt został pomyślnie usunięty.' });
+      } else{
+          return res.status(404).json({ success: false, message: 'Nie znaleziono produktu do usunięcia.' });
+      }
+  }catch (err){
+      return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+  }
+});
   
 module.exports=router;

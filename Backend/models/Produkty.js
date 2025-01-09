@@ -1,5 +1,4 @@
 const mongoose=require('mongoose');
-// const { Katygorie } = require('./Katygorie');
 
 //Schemat produktu 
 const produktySchemat=mongoose.Schema({
@@ -13,8 +12,7 @@ const produktySchemat=mongoose.Schema({
   },
   cena:{
     type:Number,
-    required: true,
-    default:0,   
+    required: true, 
   },
   katygoria:{
     type: mongoose.Schema.Types.ObjectId,
